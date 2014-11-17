@@ -129,24 +129,25 @@ class JsonRpcController extends ContainerAware
                         sprintf('Number of given parameters (%d) does not match the number of expected parameters (%d required, %d total)',
                             count($params), $r->getNumberOfRequiredParameters(), $r->getNumberOfParameters()));
                 }
-            } elseif (is_object($params)) {
-                $rps = $r->getParameters();
-                $newparams = array();
-                foreach ($rps as $i => $rp) {
-                    /* @var \ReflectionParameter $rp */
-                    $name = $rp->name;
-                    if (!isset($params->$name) && !$rp->isOptional()) {
-                        return $this->getErrorResponse(self::INVALID_PARAMS, $requestId,
-                            sprintf('Parameter %s is missing', $name));
-                    }
-                    if (isset($params->$name)) {
-                        $newparams[$i] = $params->$name;
-                    } else {
-                        $newparams[$i] = null;
-                    }
-                }
-                $params = $newparams;
             }
+
+            $rps = $r->getParameters();
+            $newparams = array();
+            foreach ($rps as $i => $rp) {
+                /* @var \ReflectionParameter $rp */
+                $name = $rp->name;
+                if (!isset($params[$name]) && !$rp->isOptional()) {
+                    return $this->getErrorResponse(self::INVALID_PARAMS, $requestId,
+                        sprintf('Parameter %s is missing', $name));
+                }
+                if (isset($params[$name])) {
+                    $newparams[$i] = $params[$name];
+                } else {
+                    $newparams[$i] = null;
+                }
+            }
+            $params = $newparams;
+
 
             try {
                 $result = call_user_func_array(array($service, $method), $params);
